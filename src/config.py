@@ -9,3 +9,4 @@ class ConfigUtility:
     OPENAI_API_KEY = config.get('OPENAI', 'open_ai_api_key')
 
     GROQ_API_KEY = config.get('GROQ', 'groq_api_key')
+    GROQ_MODEL = "llama3-8b-8192"

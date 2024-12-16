@@ -1,8 +1,4 @@
 openai
 pdfplumber
-pytesseract
-pdf2image
-opencv-python
-pandas
-pymupdf
 groq
+gliner

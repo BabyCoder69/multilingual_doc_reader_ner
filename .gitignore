@@ -7,6 +7,8 @@ __pycache__/
 test.py
 config.ini
 *.pdf
+test*
+models
 
 # Distribution / packaging
 .Python

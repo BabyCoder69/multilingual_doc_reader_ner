@@ -250,8 +250,48 @@ class LLMInference:
                     "role": "system",
                     "content": f"""You are a document analyzer. Your job is to understand the given question and answer 
                                     it as per the text given in a precise manner without any additional explanations.
+                                    If the answer is not available in the text, return the string "N/A"
 
                                 Output the sectioned text in the following json format:
+                                class QA(BaseModel):
+                                    text: str # Answer to the question
+                                    score: float # range between 0 and 1 indicating the confidence of the answer
+                                """,
+                },
+                {
+                    "role": "user",
+                    "content": f"""
+                                The question: {question},
+                                The text: {text}
+                                """,
+                },
+            ],
+            n=1,
+            temperature=0.2,
+            response_format={"type": "json_object"}
+        )
+
+        return json.loads(res.choices[0].message.content)
+
+    def find_multiple_answers(self, question, text):
+        res = self.groq_client.chat.completions.create(
+            model=self.groq_model,
+            messages=[
+                {
+                    "role": "system",
+                    "content": f"""You are a document analyzer. Your job is to understand the given question and answer 
+                                    it as per the text given in a precise manner without any additional explanations.
+                                    If the answer is not available in the text, return the string "N/A".
+                                    The question may have multiple answers. You should return a list of answers in descending order of confidence.
+                                    
+                                    Here is an example on how to answer the question:
+                                    Question: What are port_name and eta of all the transit_ports?
+                                    Output: 
+                                    {
+                                        "answer": [{"port_name": {"text": "Port A", "score": 0.8}, "eta": {"text": "2023-01-01", "score": 0.8}}, {"port_name": {"text": "Port B", "score": 0.7}, "eta": {"text": "2023-02-01", "score": 0.7}}]
+                                    }
+
+                                Each element of the list must follow the json format:
                                 class QA(BaseModel):
                                     text: str # Answer to the question
                                     score: float # range between 0 and 1 indicating the confidence of the answer

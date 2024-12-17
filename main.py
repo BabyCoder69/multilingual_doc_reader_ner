@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 if __name__ == "__main__":
     ext_engine_inst = ExtractionEngine()
-    print(ext_engine_inst.process_pdf(pdf_path="Posco_Logistics.pdf"))
+    print(ext_engine_inst.process_pdf_v1(pdf_path="Posco_Logistics.pdf"))
 
 
 

@@ -279,7 +279,7 @@ class LLMInference:
             messages=[
                 {
                     "role": "system",
-                    "content": f"""You are a document analyzer. Your job is to understand the given question and answer 
+                    "content": """You are a document analyzer. Your job is to understand the given question and answer 
                                     it as per the text given in a precise manner without any additional explanations.
                                     If the answer is not available in the text, return the string "N/A".
                                     The question may have multiple answers. You should return a list of answers in descending order of confidence.

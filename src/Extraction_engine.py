@@ -119,13 +119,41 @@ class ExtractionEngine:
         }
 
     def process_cargo_information(self, text, entire_text):
-        pass
+        questions = ["cargo_type", "cargo_description", "total_weight"]
+        answers = self.ner_inst.process_section_l1(questions=questions, section_text=text, entire_text=entire_text)
+
+        cargo_doc = {
+            "cargo_type": answers["cargo_type"],
+            "cargo_description": answers["cargo_description"],
+            "container_details": self.ner_inst.process_section_l2(questions=list(self.extraction_model["cargo_information"]["container_details"].keys()),
+                                                                  sub_section="container_details",
+                                                                  section="cargo_information",
+                                                                  section_text=text,
+                                                                  entire_text=entire_text),
+            "total_weight": answers["total_weight"]
+        }
+
+        return cargo_doc
 
     def process_vessel_information(self, text, entire_text):
-        pass
+        return self.ner_inst.process_section_l1(questions=list(self.extraction_model["vessel_information"].keys()),
+                                                section_text=text,
+                                                entire_text=entire_text)
 
     def process_parties_information(self, text, entire_text):
-        pass
+        return {
+            "shipper": self.ner_inst.process_section_l2(questions=list(self.extraction_model["parties_information"]["shipper"].keys()),
+                                                        sub_section="shipper",
+                                                        section="parties_information",
+                                                        section_text=text,
+                                                        entire_text=entire_text),
+            "carrier": self.ner_inst.process_section_l2(questions=list(self.extraction_model["parties_information"]["carrier"].keys()),
+                                                        sub_section="carrier",
+                                                        section="parties_information",
+                                                        section_text=text,
+                                                        entire_text=entire_text)
+
+        }
 
 
 
@@ -158,7 +186,7 @@ class ExtractionEngine:
 
         entire_text = "\n".join(value for value in agg_sections.values())
 
-        final_doc = {
+        return {
             "booking_details": self.process_booking_details(text=agg_sections["booking_details"],
                                                             entire_text=entire_text),
             "shipment_route": self.process_shipment_route(text=agg_sections["shipment_route"],
@@ -170,6 +198,3 @@ class ExtractionEngine:
             "parties_information": self.process_parties_information(text=agg_sections["parties_information"],
                                                                     entire_text=entire_text)
         }
-
-
-        return final_doc

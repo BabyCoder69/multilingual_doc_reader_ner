@@ -85,6 +85,20 @@ class ExtractionEngine:
 
 
     def aggregate_sections(self, pages):
+        """
+        Aggregates text content from multiple pages into predefined sections.
+
+        This function processes a list of pages, isolates specific sections from each page using a language model,
+        and combines the content of the same sections across pages into a single aggregated result.
+
+        Args:
+            pages (list): A list of strings where each string represents the text content of a page.
+
+        Returns:
+            dict: A dictionary where the keys are section names (defined in `self.extraction_model`)
+                  and the values are the aggregated text content for each section.
+        """
+
         try:
             res = {}
             sections = list(self.extraction_model.keys())
@@ -102,6 +116,22 @@ class ExtractionEngine:
             logger.error(f"Error aggregating sections: {e}")
 
     def process_booking_details(self, text, entire_text):
+        """
+        Processes booking details from a given text.
+
+        This function extracts booking-related information by applying a named entity recognition (NER)
+        model to the provided section text and the entire text. It uses predefined questions
+        from the "booking_details" section of the extraction model to guide the extraction process.
+
+        Args:
+            text (str): The specific section text containing booking details.
+            entire_text (str): The full text from which the section was extracted.
+
+        Returns:
+            dict: A dictionary containing the extracted booking details, where the keys are
+                  predefined questions and the values are the corresponding extracted information.
+        """
+
         try:
             logger.info("Processing booking details...")
             questions = list(self.extraction_model["booking_details"].keys())
@@ -110,6 +140,25 @@ class ExtractionEngine:
             logger.error(f"Error processing booking details: {e}")
 
     def process_shipment_route(self, text, entire_text):
+        """
+        Processes shipment route information from a given text.
+
+        This function extracts details related to the shipment route, including the origin, destination,
+        and transit ports. It uses a named entity recognition (NER) model for structured extraction
+        of origin and destination details and a language model (LLM) to identify multiple answers
+        for transit ports.
+
+        Args:
+            text (str): The specific section text containing shipment route details.
+            entire_text (str): The full text from which the section was extracted.
+
+        Returns:
+            dict: A dictionary containing the following keys:
+                - "origin": Extracted details about the origin section.
+                - "destination": Extracted details about the destination section.
+                - "transit_ports": A list of answers with port names and estimated times of arrival (ETA).
+        """
+
         try:
             logger.info("Processing shipment route...")
             return {
@@ -130,6 +179,25 @@ class ExtractionEngine:
             logger.error(f"Error processing shipment route: {e}")
 
     def process_cargo_information(self, text, entire_text):
+        """
+        Processes cargo information from a given text.
+
+        This function extracts cargo-related details such as cargo type, description,
+        total weight, and container details. It uses a named entity recognition (NER)
+        model for structured extraction of these elements.
+
+        Args:
+            text (str): The specific section text containing cargo information.
+            entire_text (str): The full text from which the section was extracted.
+
+        Returns:
+            dict: A dictionary containing the following keys:
+                - "cargo_type": The type of cargo.
+                - "cargo_description": A description of the cargo.
+                - "container_details": Detailed information about the cargo containers.
+                - "total_weight": The total weight of the cargo.
+        """
+
         try:
             logger.info("Processing cargo information...")
             questions = ["cargo_type", "cargo_description", "total_weight"]
@@ -151,6 +219,23 @@ class ExtractionEngine:
             logger.error(f"Error processing cargo information: {e}")
 
     def process_vessel_information(self, text, entire_text):
+        """
+        Processes vessel information from a given text.
+
+        This function extracts vessel-related details such as vessel name, voyage,
+        and estimated timings. It uses a named entity recognition (NER) model
+        to process the section text based on predefined questions.
+
+        Args:
+            text (str): The specific section text containing vessel information.
+            entire_text (str): The full text from which the section was extracted.
+
+        Returns:
+            dict: A dictionary containing the extracted vessel information,
+                  where the keys are predefined questions from the "vessel_information" section
+                  of the extraction model and the values are the corresponding extracted data.
+        """
+
         try:
             logger.info("Processing vessel information...")
             return self.ner_inst.process_section_l1(questions=list(self.extraction_model["vessel_information"].keys()),
@@ -160,6 +245,23 @@ class ExtractionEngine:
             logger.error(f"Error processing vessel information: {e}")
 
     def process_parties_information(self, text, entire_text):
+        """
+        Processes parties information from a given text.
+
+        This function extracts details about the shipper and carrier involved in the shipment.
+        It uses a named entity recognition (NER) model to process and retrieve structured information
+        for each party based on predefined questions.
+
+        Args:
+            text (str): The specific section text containing parties information.
+            entire_text (str): The full text from which the section was extracted.
+
+        Returns:
+            dict: A dictionary containing the following keys:
+                - "shipper": Extracted details about the shipper.
+                - "carrier": Extracted details about the carrier.
+        """
+
         try:
             logger.info("Processing parties information...")
             return {
@@ -201,6 +303,31 @@ class ExtractionEngine:
 
 
     def process_pdf(self, pdf_path):
+        """
+        Processes a PDF document to extract and structure relevant shipment-related information.
+
+        This function extracts text from a PDF, translates it if necessary, aggregates it into
+        predefined sections, and processes each section to retrieve structured details such as
+        booking details, shipment route, cargo information, vessel information, and parties involved.
+
+        Args:
+            pdf_path (str): The file path to the PDF document.
+
+        Returns:
+            dict: A dictionary containing the following keys:
+                - "booking_details": Structured information about booking details.
+                - "shipment_route": Details of the shipment's route, including origin, destination, and transit ports.
+                - "cargo_information": Information about the cargo, including type, description, and weight.
+                - "vessel_information": Details of the vessel, such as name, voyage, and timings.
+                - "parties_information": Information about the shipper and carrier.
+
+        Steps:
+            1. Extracts text from the PDF file.
+            2. Translates each page if needed.
+            3. Aggregates the text into predefined sections.
+            4. Processes each section to extract relevant information.
+        """
+
         try:
             logger.info(f"Processing PDF: {pdf_path}")
             pages = extract_text_from_pdf(pdf_path)

@@ -19,56 +19,65 @@ class NerModel:
         return text.replace("\r\n", "")
 
     def predict_ner_labels(self, text, labels):
-        logger.info("Predicting NER labels...")
-        return self.model.predict_entities(text, labels)
+        try:
+            logger.info("Predicting NER labels...")
+            return self.model.predict_entities(text, labels)
+        except Exception as e:
+            logger.error(f"Error while predicting NER labels: {e}")
 
     def process_section_l1(self, questions, section_text, entire_text):
+        try:
 
-        processed_text = self.process_text(section_text)
-        entire_text = self.process_text(entire_text)
+            processed_text = self.process_text(section_text)
+            entire_text = self.process_text(entire_text)
 
-        section_res = {}
+            section_res = {}
 
-        for question in questions:
-            _q = f"What is the {question}?\n"
-            _input = _q + processed_text
-            ner_res = self.predict_ner_labels(text=_input, labels=["answer"])
+            for question in questions:
+                _q = f"What is the {question}?\n"
+                _input = _q + processed_text
+                ner_res = self.predict_ner_labels(text=_input, labels=["answer"])
 
-            if ner_res:
-                ner_pred = max(ner_res, key=lambda x: x['score'])
-                if ner_pred["score"] < self.ner_threshold:
+                if ner_res:
+                    ner_pred = max(ner_res, key=lambda x: x['score'])
+                    if ner_pred["score"] < self.ner_threshold:
+                        ner_pred = self.llm_inst.answer_question(question=_q, text=entire_text)
+                else:
                     ner_pred = self.llm_inst.answer_question(question=_q, text=entire_text)
-            else:
-                ner_pred = self.llm_inst.answer_question(question=_q, text=entire_text)
 
-            section_res[question] = {
+                section_res[question] = {
+                        "value": ner_pred["text"],
+                        "confidence": ner_pred["score"]
+                    }
+
+            return section_res
+        except Exception as e:
+            logger.error(f"Error while processing section: {e}")
+
+    def process_section_l2(self, questions, sub_section, section, section_text, entire_text):
+        try:
+            processed_text = self.process_text(section_text)
+            entire_text = self.process_text(entire_text)
+
+            section_res = {}
+
+            for question in questions:
+                _q = f"What is the {question} of the {sub_section} of the {section}?\n"
+                _input = _q + processed_text
+                ner_res = self.predict_ner_labels(text=_input, labels=["answer"])
+
+                if ner_res:
+                    ner_pred = max(ner_res, key=lambda x: x['score'])
+                    if ner_pred["score"] < self.ner_threshold:
+                        ner_pred = self.llm_inst.answer_question(question=_q, text=entire_text)
+                else:
+                    ner_pred = self.llm_inst.answer_question(question=_q, text=entire_text)
+
+                section_res[question] = {
                     "value": ner_pred["text"],
                     "confidence": ner_pred["score"]
                 }
 
-        return section_res
-
-    def process_section_l2(self, questions, sub_section, section, section_text, entire_text):
-        processed_text = self.process_text(section_text)
-        entire_text = self.process_text(entire_text)
-
-        section_res = {}
-
-        for question in questions:
-            _q = f"What is the {question} of the {sub_section} of the {section}?\n"
-            _input = _q + processed_text
-            ner_res = self.predict_ner_labels(text=_input, labels=["answer"])
-
-            if ner_res:
-                ner_pred = max(ner_res, key=lambda x: x['score'])
-                if ner_pred["score"] < self.ner_threshold:
-                    ner_pred = self.llm_inst.answer_question(question=_q, text=entire_text)
-            else:
-                ner_pred = self.llm_inst.answer_question(question=_q, text=entire_text)
-
-            section_res[question] = {
-                "value": ner_pred["text"],
-                "confidence": ner_pred["score"]
-            }
-
-        return section_res
+            return section_res
+        except Exception as e:
+            logger.error(f"Error while processing section: {e}")

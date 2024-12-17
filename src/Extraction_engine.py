@@ -85,75 +85,98 @@ class ExtractionEngine:
 
 
     def aggregate_sections(self, pages):
-        res = {}
-        sections = list(self.extraction_model.keys())
-        for page in pages:
-            _secs = self.llm_inst.isolate_sections(sections=sections, text=page)
+        try:
+            res = {}
+            sections = list(self.extraction_model.keys())
+            for page in pages:
+                _secs = self.llm_inst.isolate_sections(sections=sections, text=page)
 
-            for _sec in _secs:
-                if _sec in res:
-                    res[_sec] += "\n" + _secs[_sec]
-                else:
-                    res[_sec] = _secs[_sec]
+                for _sec in _secs:
+                    if _sec in res:
+                        res[_sec] += "\n" + _secs[_sec]
+                    else:
+                        res[_sec] = _secs[_sec]
 
-        return res
+            return res
+        except Exception as e:
+            logger.error(f"Error aggregating sections: {e}")
 
     def process_booking_details(self, text, entire_text):
-        questions = list(self.extraction_model["booking_details"].keys())
-        return self.ner_inst.process_section_l1(questions=questions, section_text=text, entire_text=entire_text)
+        try:
+            logger.info("Processing booking details...")
+            questions = list(self.extraction_model["booking_details"].keys())
+            return self.ner_inst.process_section_l1(questions=questions, section_text=text, entire_text=entire_text)
+        except Exception as e:
+            logger.error(f"Error processing booking details: {e}")
 
     def process_shipment_route(self, text, entire_text):
-        return {
-            "origin": self.ner_inst.process_section_l2(questions=list(self.extraction_model["shipment_route"]["origin"].keys()),
-                                                       sub_section="origin",
-                                                       section="shipment_route",
-                                                       section_text=text,
-                                                       entire_text=entire_text),
-            "destination": self.ner_inst.process_section_l2(questions=list(self.extraction_model["shipment_route"]["destination"].keys()),
-                                                            sub_section="destination",
-                                                            section="shipment_route",
-                                                            section_text=text,
-                                                            entire_text=entire_text),
-            "transit_ports": self.llm_inst.find_multiple_answers(question="What are port_name and eta of all the transit_ports?",
-                                                                 text=entire_text)
-        }
+        try:
+            logger.info("Processing shipment route...")
+            return {
+                "origin": self.ner_inst.process_section_l2(questions=list(self.extraction_model["shipment_route"]["origin"].keys()),
+                                                           sub_section="origin",
+                                                           section="shipment_route",
+                                                           section_text=text,
+                                                           entire_text=entire_text),
+                "destination": self.ner_inst.process_section_l2(questions=list(self.extraction_model["shipment_route"]["destination"].keys()),
+                                                                sub_section="destination",
+                                                                section="shipment_route",
+                                                                section_text=text,
+                                                                entire_text=entire_text),
+                "transit_ports": self.llm_inst.find_multiple_answers(question="What are port_name and eta of all the transit_ports?",
+                                                                     text=entire_text)
+            }
+        except Exception as e:
+            logger.error(f"Error processing shipment route: {e}")
 
     def process_cargo_information(self, text, entire_text):
-        questions = ["cargo_type", "cargo_description", "total_weight"]
-        answers = self.ner_inst.process_section_l1(questions=questions, section_text=text, entire_text=entire_text)
+        try:
+            logger.info("Processing cargo information...")
+            questions = ["cargo_type", "cargo_description", "total_weight"]
+            answers = self.ner_inst.process_section_l1(questions=questions, section_text=text, entire_text=entire_text)
 
-        cargo_doc = {
-            "cargo_type": answers["cargo_type"],
-            "cargo_description": answers["cargo_description"],
-            "container_details": self.ner_inst.process_section_l2(questions=list(self.extraction_model["cargo_information"]["container_details"].keys()),
-                                                                  sub_section="container_details",
-                                                                  section="cargo_information",
-                                                                  section_text=text,
-                                                                  entire_text=entire_text),
-            "total_weight": answers["total_weight"]
-        }
+            cargo_doc = {
+                "cargo_type": answers["cargo_type"],
+                "cargo_description": answers["cargo_description"],
+                "container_details": self.ner_inst.process_section_l2(questions=list(self.extraction_model["cargo_information"]["container_details"].keys()),
+                                                                      sub_section="container_details",
+                                                                      section="cargo_information",
+                                                                      section_text=text,
+                                                                      entire_text=entire_text),
+                "total_weight": answers["total_weight"]
+            }
 
-        return cargo_doc
+            return cargo_doc
+        except Exception as e:
+            logger.error(f"Error processing cargo information: {e}")
 
     def process_vessel_information(self, text, entire_text):
-        return self.ner_inst.process_section_l1(questions=list(self.extraction_model["vessel_information"].keys()),
-                                                section_text=text,
-                                                entire_text=entire_text)
+        try:
+            logger.info("Processing vessel information...")
+            return self.ner_inst.process_section_l1(questions=list(self.extraction_model["vessel_information"].keys()),
+                                                    section_text=text,
+                                                    entire_text=entire_text)
+        except Exception as e:
+            logger.error(f"Error processing vessel information: {e}")
 
     def process_parties_information(self, text, entire_text):
-        return {
-            "shipper": self.ner_inst.process_section_l2(questions=list(self.extraction_model["parties_information"]["shipper"].keys()),
-                                                        sub_section="shipper",
-                                                        section="parties_information",
-                                                        section_text=text,
-                                                        entire_text=entire_text),
-            "carrier": self.ner_inst.process_section_l2(questions=list(self.extraction_model["parties_information"]["carrier"].keys()),
-                                                        sub_section="carrier",
-                                                        section="parties_information",
-                                                        section_text=text,
-                                                        entire_text=entire_text)
+        try:
+            logger.info("Processing parties information...")
+            return {
+                "shipper": self.ner_inst.process_section_l2(questions=list(self.extraction_model["parties_information"]["shipper"].keys()),
+                                                            sub_section="shipper",
+                                                            section="parties_information",
+                                                            section_text=text,
+                                                            entire_text=entire_text),
+                "carrier": self.ner_inst.process_section_l2(questions=list(self.extraction_model["parties_information"]["carrier"].keys()),
+                                                            sub_section="carrier",
+                                                            section="parties_information",
+                                                            section_text=text,
+                                                            entire_text=entire_text)
 
-        }
+            }
+        except Exception as e:
+            logger.error(f"Error processing parties information: {e}")
 
 
 
@@ -178,23 +201,27 @@ class ExtractionEngine:
 
 
     def process_pdf(self, pdf_path):
-        pages = extract_text_from_pdf(pdf_path)
+        try:
+            logger.info(f"Processing PDF: {pdf_path}")
+            pages = extract_text_from_pdf(pdf_path)
 
-        translated_pages = [self.llm_inst.determine_language_and_translate(text=page) for page in pages]
+            translated_pages = [self.llm_inst.determine_language_and_translate(text=page) for page in pages]
 
-        agg_sections = self.aggregate_sections(pages=translated_pages)
+            agg_sections = self.aggregate_sections(pages=translated_pages)
 
-        entire_text = "\n".join(value for value in agg_sections.values())
+            entire_text = "\n".join(value for value in agg_sections.values())
 
-        return {
-            "booking_details": self.process_booking_details(text=agg_sections["booking_details"],
-                                                            entire_text=entire_text),
-            "shipment_route": self.process_shipment_route(text=agg_sections["shipment_route"],
-                                                          entire_text=entire_text),
-            "cargo_information": self.process_cargo_information(text=agg_sections["cargo_information"],
+            return {
+                "booking_details": self.process_booking_details(text=agg_sections["booking_details"],
                                                                 entire_text=entire_text),
-            "vessel_information": self.process_vessel_information(text=agg_sections["vessel_information"],
-                                                                  entire_text=entire_text),
-            "parties_information": self.process_parties_information(text=agg_sections["parties_information"],
-                                                                    entire_text=entire_text)
-        }
+                "shipment_route": self.process_shipment_route(text=agg_sections["shipment_route"],
+                                                              entire_text=entire_text),
+                "cargo_information": self.process_cargo_information(text=agg_sections["cargo_information"],
+                                                                    entire_text=entire_text),
+                "vessel_information": self.process_vessel_information(text=agg_sections["vessel_information"],
+                                                                      entire_text=entire_text),
+                "parties_information": self.process_parties_information(text=agg_sections["parties_information"],
+                                                                        entire_text=entire_text)
+            }
+        except Exception as e:
+            logger.error(f"Error processing PDF: {e}")
